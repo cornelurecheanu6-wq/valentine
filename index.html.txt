@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Valentine 💌</title>
+
+  <style>
+    :root{
+      --bg1:#ffdde1;
+      --bg2:#ee9ca7;
+      --card:#ffffffcc;
+      --text:#2b2b2b;
+      --yes:#22c55e;
+      --no:#ef4444;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(1200px 800px at 20% 20%, var(--bg1), transparent 60%),
+        radial-gradient(1200px 800px at 80% 80%, var(--bg2), transparent 60%),
+        linear-gradient(135deg, #fff, #ffeef2);
+      color:var(--text);
+      padding:18px;
+
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .card{
+      width:min(560px, 92vw);
+      background:var(--card);
+      backdrop-filter: blur(10px);
+      border:1px solid #fff;
+      border-radius:24px;
+      padding:22px 18px 28px;
+      text-align:center;
+      box-shadow: 0 20px 50px rgba(0,0,0,.12);
+    }
+
+    .photo{
+      width:min(280px, 70vw);
+      aspect-ratio: 3/4;
+      object-fit:cover;
+      border-radius:18px;
+      border:2px solid #fff;
+      box-shadow:0 10px 28px rgba(0,0,0,.15);
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(22px,4vw,34px);
+    }
+
+    .subtitle{
+      margin:0 0 18px;
+      opacity:.75;
+      font-size:14px;
+    }
+
+    .btn-area{
+      position:relative;
+      height:110px;
+      margin-bottom:6px;
+    }
+
+    button{
+      border:0;
+      padding:14px 22px;
+      border-radius:999px;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      color:white;
+      min-width:120px;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .yes{
+      background: linear-gradient(135deg, #34d399, var(--yes));
+      position:absolute;
+      left:calc(50% - 74px);
+      top:50%;
+      transform:translate(-50%,-50%);
+    }
+
+    .no{
+      background: linear-gradient(135deg, #fb7185, var(--no));
+      position:absolute;
+      left:calc(50% + 74px);
+      top:50%;
+      transform:translate(-50%,-50%);
+    }
+
+    .hint{
+      margin-top:10px;
+      font-size:14px;
+      font-weight:600;
+      opacity:.75;
+    }
+
+    .success{
+      display:none;
+      margin-top:18px;
+      padding:16px;
+      border-radius:18px;
+      background:#ffffffb3;
+      border:1px solid #fff;
+    }
+
+    .success .big{
+      font-size:24px;
+      font-weight:900;
+    }
+
+    .heart{
+      position:fixed;
+      top:-40px;
+      font-size:22px;
+      pointer-events:none;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall{
+      to{
+        transform: translateY(calc(100vh + 60px)) rotate(360deg);
+        opacity:0.95;
+      }
+    }
+
+    canvas{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="card">
+  <img src="bianca.jpg" alt="Bianca" class="photo">
+
+  <h1>Bianca, vrei sa fii my valentine? 💖</h1>
+  <p class="subtitle">Gândește-te bine 😄</p>
+
+  <div class="btn-area" id="btnArea">
+    <button class="yes" id="yesBtn">DA</button>
+    <button class="no" id="noBtn">NU</button>
+  </div>
+
+  <p id="hintText" class="hint">„Nu spun doar cei slabi 😌”</p>
+
+  <div class="success" id="successBox">
+    <p class="big">Yayyyyy 🥳🥳🥳🥳🫶🏻❤️❤️❤️</p>
+  </div>
+</div>
+
+<script>
+  const yesBtn = document.getElementById('yesBtn');
+  const noBtn = document.getElementById('noBtn');
+  const btnArea = document.getElementById('btnArea');
+  const successBox = document.getElementById('successBox');
+  const hintText = document.getElementById('hintText');
+
+  let locked = false;
+
+  function moveNo(){
+    if(locked) return;
+
+    const area = btnArea.getBoundingClientRect();
+    const btn = noBtn.getBoundingClientRect();
+    const pad = 8;
+
+    const maxX = area.width - btn.width - pad;
+    const maxY = area.height - btn.height - pad;
+
+    if(maxX <= 0 || maxY <= 0) return;
+
+    const x = Math.random() * maxX;
+    const y = Math.random() * maxY;
+
+    noBtn.style.left = (x + btn.width/2) + "px";
+    noBtn.style.top  = (y + btn.height/2) + "px";
+  }
+
+  noBtn.addEventListener('mouseenter', moveNo);
+  noBtn.addEventListener('touchstart', e => {
+    e.preventDefault();
+    moveNo();
+  }, {passive:false});
+  noBtn.addEventListener('click', e => {
+    e.preventDefault();
+    moveNo();
+  });
+
+  yesBtn.addEventListener('click', () => {
+    locked = true;
+    successBox.style.display = 'block';
+    hintText.style.display = 'none';
+    yesBtn.disabled = true;
+    noBtn.disabled = true;
+
+    hearts(36);
+    confetti(1800);
+  });
+
+  function hearts(n){
+    const icons = ["💖","💘","💕","💗","💓","💝"];
+    for(let i=0;i<n;i++){
+      const h = document.createElement('div');
+      h.className = 'heart';
+      h.textContent = icons[Math.floor(Math.random()*icons.length)];
+      h.style.left = Math.random()*100 + 'vw';
+      h.style.fontSize = (18 + Math.random()*18) + 'px';
+      h.style.animationDuration = (2.5 + Math.random()*2.5) + 's';
+      document.body.appendChild(h);
+      setTimeout(()=>h.remove(),6000);
+    }
+  }
+
+  function confetti(ms){
+    const c = document.getElementById('confetti');
+    const ctx = c.getContext('2d');
+    c.width = innerWidth;
+    c.height = innerHeight;
+    c.style.display = 'block';
+
+    const pieces=[];
+    const colors=["#ff4d6d","#ff9f1c","#2ec4b6","#a78bfa","#22c55e"];
+
+    for(let i=0;i<220;i++){
+      pieces.push({
+        x:Math.random()*c.width,
+        y:-20,
+        w:6+Math.random()*6,
+        h:10+Math.random()*10,
+        vx:-2+Math.random()*4,
+        vy:2+Math.random()*5,
+        r:Math.random()*Math.PI,
+        vr:-0.2+Math.random()*0.4,
+        color:colors[Math.floor(Math.random()*colors.length)]
+      });
+    }
+
+    const start=performance.now();
+    function frame(t){
+      ctx.clearRect(0,0,c.width,c.height);
+      pieces.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy; p.vy+=0.03; p.r+=p.vr;
+        ctx.save();
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.r);
+        ctx.fillStyle=p.color;
+        ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+        ctx.restore();
+      });
+      if(t-start<ms) requestAnimationFrame(frame);
+      else c.style.display='none';
+    }
+    requestAnimationFrame(frame);
+  }
+</script>
+
+</body>
+</html>
